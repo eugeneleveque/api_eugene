@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>
+        <%= header.title %>
+    </title>
+    <meta charset="UTF-8">
+    <meta name="description" content="mon site">
+    <meta name="keywords" content="Moi, clement, aubert ">
+    <meta name="author" content="Clement Aubert">
+
+<body>
+    <h1>Avec de la data injectée</h1>
+    <p>Bienvenue, <%= session.user %>!</p>
+
+    <nav>
+        <ul>
+            <li><a href="/home">HOME</a></li>
+            <li><a href="/aboutMe">aPropos</a></li>
+            <li><a href="/maPhoto">ma photo</a></li>
+            <% if (session.user) { %>
+                <a href="/logout">Se déconnecter</a>
+              <% } else { %>
+                <a href="/login">Se connecter</a>
+              <% } %>
+              <li><a href="/clement.html">Socket.io</a></li>
+        </ul>
+    </nav>
+    <header><%- body.header %></header>
+    <main><%- body.main %></main>
+    <footer><%- body.footer %></footer>
+</body>
+
+</html>
