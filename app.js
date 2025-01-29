@@ -4,6 +4,8 @@ import path from "path";
 import session from "express-session";
 import { fileURLToPath } from "url";
 import sequelize from "./db.js";
+import http from "http"; // Import pour créer un serveur HTTP
+import initSocket from "./socket.js"; // Appel du fichier socket.js
 
 // Configuration
 const SERVER_PORT = 8080;
@@ -11,7 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const template_folder = path.join(__dirname, "tmpl", "layout");
 
-// Initialisation du serveur
+// Initialisation du serveur Express
 const app = express();
 
 // Middleware pour les cookies et l'analyse des requêtes
@@ -38,10 +40,6 @@ app.use((req, res, next) => {
   res.locals.session = req.session; // Transmettre la session à toutes les vues
   next();
 });
-
-// app.get("/image-clem", (req, res) => {
-//   res.sendFile(path.join(__dirname, "public", "tmpl", "delle.webp"));
-// });
 
 // Routes
 app.get("/(HOME)?", (req, res) => {
@@ -75,8 +73,12 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-app.get("/clement.html", (req, res) => {
-  res.render("socket");
+app.get("/chat", (req, res) => {
+  res.render("chat");
+});
+
+app.get("/aboutMe", (req, res) => {
+  res.render("aboutMe");
 });
 
 // Gestion des pages introuvables
@@ -84,11 +86,18 @@ app.use((req, res) => {
   res.status(404).render("NotFound", { message: "Page non trouvée" });
 });
 
+// Création du serveur HTTP
+const server = http.createServer(app);
+
+// Intégration de Socket.io via socket.js
+initSocket(server);
+
 // Lancement du serveur
-app.listen(SERVER_PORT, () => {
+server.listen(SERVER_PORT, () => {
   console.log(`Serveur lancé sur http://localhost:${SERVER_PORT} 🚀!`);
 });
 
+// Connexion à la base de données
 sequelize
   .authenticate()
   .then(() => {
