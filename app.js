@@ -6,12 +6,16 @@ import { fileURLToPath } from "url";
 import sequelize from "./db.js";
 import http from "http"; // Import pour créer un serveur HTTP
 import initSocket from "./socket.js"; // Appel du fichier socket.js
+import swaggerUi from "swagger-ui-express";
+import swaggerJSDoc from "swagger-jsdoc";
+import swaggerOptions from "./swagger.js";
 
 // Configuration
 const SERVER_PORT = 8080;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const template_folder = path.join(__dirname, "tmpl", "layout");
+const swaggerDocs = swaggerJSDoc(swaggerOptions);
 
 // Initialisation du serveur Express
 const app = express();
@@ -21,6 +25,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname + "/public"));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Middleware pour les sessions
 app.use(
@@ -44,6 +49,15 @@ app.use((req, res, next) => {
   res.locals.session = req.session; // Transmettre la session à toutes les vues
   next();
 });
+/**
+ * @openapi
+ * /:
+ *   get:
+ *     description: Welcome to swagger-jsdoc!
+ *     responses:
+ *       200:
+ *         description: Returns a mysterious string.
+ */
 
 // Routes
 app.get("/(HOME)?", (req, res) => {
@@ -80,7 +94,7 @@ app.get("/logout", (req, res) => {
 app.get("/chat", (req, res) => {
   res.render("chat");
 });
-
+// routes a propos de moi
 app.get("/aboutMe", (req, res) => {
   res.render("aboutMe");
 });

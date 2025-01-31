@@ -1,4 +1,5 @@
 import { Server } from "socket.io";
+import determineCoupureGeneric from "./dab.js";
 
 export default (server) => {
   const io = new Server(server, {
@@ -31,14 +32,34 @@ export default (server) => {
     // Réception d'un message
     socket.on("chat message", (msg) => {
       console.log("Message reçu :", msg);
+      // Vérification si le message est une commande pour le DAB
+      const dabRegex = /^DAB\s([\d,]+)€$/i;
+      const match = msg.match(dabRegex);
 
-      // Diffuser le message à tous les clients
-      io.emit("chat_message", {
-        type: "chat",
-        user: socket.username,
-        time: getTime(),
-        content: msg, // Utiliser "msg" au lieu de "message"
-      });
+      if (match) {
+        // Extraction du montant de la commande DAB
+        const montantString = match[1].replace(",", ".");
+        const montant = parseFloat(montantString);
+
+        // Utilisation de la fonction pour déterminer les coupures
+        const result = determineCoupureGeneric({ montant, typeDevise: "EUR" });
+
+        // Diffuser la réponse dans le chat
+        io.emit("chat_message", {
+          type: "chat",
+          user: "Système", // ou un nom spécifique pour le bot
+          time: getTime(),
+          content: result, // Afficher le résultat de la répartition
+        });
+      } else {
+        // Diffuser le message classique à tous les clients
+        io.emit("chat_message", {
+          type: "chat",
+          user: socket.username,
+          time: getTime(),
+          content: msg, // Utiliser "msg" au lieu de "message"
+        });
+      }
     });
     // Deconnection du socket
     socket.on("disconnect", () => {

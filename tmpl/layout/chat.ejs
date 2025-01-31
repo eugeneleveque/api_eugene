@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -81,16 +81,16 @@
   <div id="chat-container">
     <h1>Chat en temps réel</h1>
 
-    <!-- Choix du pseudo -->
+    Choix du pseudo
     <div id="username-container">
       <input id="username" type="text" placeholder="Entrez votre pseudo" required>
       <button onclick="joinChat()">Rejoindre</button>
     </div>
 
-    <!-- Zone de chat -->
+    Zone de chat
     <ul id="messages"></ul>
 
-    <!-- Envoi de messages -->
+    Envoi de messages
     <div id="message-container" style="display: none;">
       <input id="message" type="text" placeholder="Écrivez un message" autocomplete="off">
       <button onclick="sendMessage()">Envoyer</button>
@@ -157,4 +157,187 @@
     }
   </script>
 </body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat en temps réel</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #f4f4f4;
+    }
+
+    #chat-container {
+      width: 80%;
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #messages {
+      list-style: none;
+      padding: 0;
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+
+    #messages li {
+      padding: 5px 10px;
+      margin: 5px 0;
+      border-radius: 5px;
+    }
+
+    #messages .system {
+      font-style: italic;
+      color: #888;
+    }
+
+    #messages .chat {
+      background-color: #e1f5fe;
+    }
+
+    #messages .repartition {
+      background-color: #e8f5e9;
+      color: #388e3c;
+      font-family: "Courier New", monospace;
+    }
+
+    #username-container, #message-container {
+      display: flex;
+      gap: 10px;
+    }
+
+    input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px 15px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <h1>Chat en temps réel</h1>
+
+    <!-- Choix du pseudo -->
+    <div id="username-container">
+      <input id="username" type="text" placeholder="Entrez votre pseudo" required>
+      <button onclick="joinChat()">Rejoindre</button>
+    </div>
+
+    <!-- Zone de chat -->
+    <ul id="messages"></ul>
+
+    <!-- Envoi de messages -->
+    <div id="message-container" style="display: none;">
+      <input id="message" type="text" placeholder="Écrivez un message" autocomplete="off">
+      <button onclick="sendMessage()">Envoyer</button>
+    </div>
+  </div>
+
+  <script src="http://localhost:8080/socket.io/socket.io.js"></script>
+  <script>
+    let socket;
+    let username;
+
+    // Rejoindre le chat
+    function joinChat() {
+      const input = document.getElementById("username");
+      username = input.value.trim();
+
+      if (username) {
+        // Initialiser la connexion au serveur
+        socket = io("http://localhost:8080");
+
+        // Notifier le serveur qu'un utilisateur rejoint le chat
+        socket.emit("joindre_chat", username);
+
+        // Gérer les messages reçus du serveur
+        socket.on("message", (data) => {
+          addMessage(data.type, data.content, data.time);
+        });
+
+        socket.on("chat_message", (data) => {
+          // Vérification du type de message (si c'est une répartition de coupures)
+          if (data.content.includes("Répartition pour")) {
+            addRepartitionMessage(data.content, data.time);
+          } else {
+            addMessage(data.type, `${data.user}: ${data.content}`, data.time);
+          }
+        });
+
+        // Activer la zone de chat et désactiver l'entrée du pseudo
+        document.getElementById("username-container").style.display = "none";
+        document.getElementById("message-container").style.display = "flex";
+      } else {
+        alert("Veuillez entrer un pseudo.");
+      }
+    }
+
+    // Envoyer un message
+    function sendMessage() {
+      const input = document.getElementById("message");
+      const message = input.value.trim();
+
+      if (message) {
+        socket.emit("chat message", message); // Envoyer au serveur
+        input.value = ""; // Réinitialiser le champ
+      }
+    }
+
+    // Ajouter un message dans la liste
+    function addMessage(type, content, time="") {
+      const messages = document.getElementById("messages");
+      const li = document.createElement("li");
+
+      li.className = type; // Ajoute la classe "system" ou "chat"
+      li.textContent = content;
+      li.innerHTML = time ? `<span>[${time}]</span> ${content}` : content; // Affiche l'heure si disponible
+
+      messages.appendChild(li);
+      messages.scrollTop = messages.scrollHeight; // Scroller vers le bas
+    }
+
+    // Ajouter un message de répartition spécifique
+    function addRepartitionMessage(content, time) {
+      const messages = document.getElementById("messages");
+      const li = document.createElement("li");
+
+      li.className = "repartition"; // Classe spécifique pour la répartition
+      li.innerHTML = time ? `<span>[${time}]</span> <pre>${content}</pre>` : `<pre>${content}</pre>`; // Formatage en préformaté
+
+      messages.appendChild(li);
+      messages.scrollTop = messages.scrollHeight; // Scroller vers le bas
+    }
+  </script>
+</body>
 </html>
+
