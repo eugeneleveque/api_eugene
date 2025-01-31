@@ -31,6 +31,10 @@ app.use(
   })
 );
 
+// Routes
+import utilisateurRoute from "./routes/utilisateur-route.js";
+app.use("/api/users", utilisateurRoute);
+
 // Configuration du moteur de rendu
 app.set("view engine", "ejs");
 app.set("views", template_folder);
